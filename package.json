@@ -1,0 +1,23 @@
+{
+  "name": "ask-cli",
+  "version": "0.1.0",
+  "description": "High-performance Claude AI CLI tool",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"**/*.{yml,yaml,json,md}\"",
+    "format:check": "prettier --check \"**/*.{yml,yaml,json,md}\"",
+    "format:yaml": "prettier --write \"**/*.{yml,yaml}\"",
+    "lint:yaml": "prettier --check \"**/*.{yml,yaml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "claude",
+    "rust"
+  ],
+  "author": "Engineers-Hub",
+  "license": "MIT OR Apache-2.0"
+} 

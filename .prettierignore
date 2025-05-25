@@ -1,0 +1,11 @@
+# Prettier無視設定
+target/
+*.lock
+*.log
+.git/
+node_modules/
+dist/
+build/
+
+# 生成されたファイル
+Cargo.lock 

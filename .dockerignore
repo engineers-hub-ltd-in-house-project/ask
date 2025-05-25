@@ -1,0 +1,51 @@
+# Git files
+.git
+.gitignore
+.github/
+
+# Target directory (build artifacts)
+target/
+**/target/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI/CD
+.travis.yml
+.appveyor.yml
+azure-pipelines.yml
+
+# Package management
+Cargo.lock
+package-lock.json
+yarn.lock
+
+# Testing
+tests/
+benches/
+**/tests/
+**/benches/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Scripts
+scripts/
+*.sh
+*.bat
+
+# Example files
+examples/
+**/examples/ 

@@ -1,0 +1,15 @@
+# Prettier設定
+printWidth: 100
+tabWidth: 2
+useTabs: false
+semi: false
+singleQuote: true
+quoteProps: as-needed
+trailingComma: all
+bracketSpacing: true
+arrowParens: avoid
+endOfLine: lf
+
+# YAML固有の設定
+proseWrap: preserve
+htmlWhitespaceSensitivity: strict 
