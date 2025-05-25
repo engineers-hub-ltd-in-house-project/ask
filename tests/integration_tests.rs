@@ -28,6 +28,9 @@ fn test_settings_default() {
 fn test_environment_variable_api_key() {
     let config_manager = ConfigManager::new();
 
+    // 既存のANTHROPIC_API_KEYを保存
+    let original_anthropic_key = env::var("ANTHROPIC_API_KEY").ok();
+
     // 環境変数を設定
     env::set_var("ANTHROPIC_API_KEY", "test-key-123");
 
@@ -35,13 +38,21 @@ fn test_environment_variable_api_key() {
     let key = config_manager.get_api_key_from_env();
     assert_eq!(key, Some("test-key-123".to_string()));
 
-    // クリーンアップ
-    env::remove_var("ANTHROPIC_API_KEY");
+    // クリーンアップと復元
+    if let Some(original_key) = original_anthropic_key {
+        env::set_var("ANTHROPIC_API_KEY", original_key);
+    } else {
+        env::remove_var("ANTHROPIC_API_KEY");
+    }
 }
 
 #[test]
 fn test_ask_api_key_environment_variable() {
     let config_manager = ConfigManager::new();
+
+    // 既存のANTHROPIC_API_KEYを保存して削除
+    let original_anthropic_key = env::var("ANTHROPIC_API_KEY").ok();
+    env::remove_var("ANTHROPIC_API_KEY");
 
     // ASK_API_KEY環境変数を設定
     env::set_var("ASK_API_KEY", "ask-key-456");
@@ -52,6 +63,11 @@ fn test_ask_api_key_environment_variable() {
 
     // クリーンアップ
     env::remove_var("ASK_API_KEY");
+
+    // 元のANTHROPIC_API_KEYを復元
+    if let Some(original_key) = original_anthropic_key {
+        env::set_var("ANTHROPIC_API_KEY", original_key);
+    }
 }
 
 #[test]

@@ -16,42 +16,38 @@ pub fn create_stream(response: Response) -> impl Stream<Item = Result<String>> {
                         buffer.push_str(&String::from_utf8_lossy(&chunk));
 
                         // SSE形式のパースを行う
-                        let lines: Vec<&str> = buffer.lines().collect();
-                        let mut processed_lines = 0;
+                        loop {
+                            // 完全なSSEイベントを探す（空行まで）
+                            if let Some(event_end) = buffer.find("\n\n") {
+                                let event_data = buffer[..event_end].to_string();
+                                buffer.drain(..event_end + 2);
 
-                        for (i, line) in lines.iter().enumerate() {
-                            if let Some(data) = line.strip_prefix("data: ") {
-                                if data == "[DONE]" {
-                                    return None; // ストリーム終了
+                                // データ行を抽出
+                                for line in event_data.lines() {
+                                    if let Some(data) = line.strip_prefix("data: ") {
+                                        if data == "[DONE]" {
+                                            return None; // ストリーム終了
+                                        }
+
+                                        match parse_stream_event(data) {
+                                            Ok(Some(text)) => {
+                                                return Some((Ok(text), (stream, buffer)));
+                                            }
+                                            Ok(None) => {
+                                                // テキストがない場合は続行
+                                                continue;
+                                            }
+                                            Err(_) => {
+                                                // JSONパースエラーの場合はサイレントにスキップ
+                                                continue;
+                                            }
+                                        }
+                                    }
                                 }
-
-                                match parse_stream_event(data) {
-                                    Ok(Some(text)) => {
-                                        // 処理済みの行をバッファから削除
-                                        let remaining_lines: Vec<&str> = lines[(i + 1)..].to_vec();
-                                        buffer = remaining_lines.join("\n");
-
-                                        return Some((Ok(text), (stream, buffer)));
-                                    }
-                                    Ok(None) => {
-                                        // テキストがない場合は続行
-                                        processed_lines = i + 1;
-                                        continue;
-                                    }
-                                    Err(e) => {
-                                        return Some((Err(e), (stream, buffer)));
-                                    }
-                                }
+                            } else {
+                                // 完全なイベントがない場合は、次のチャンクを待つ
+                                break;
                             }
-                            processed_lines = i + 1;
-                        }
-
-                        // 処理済みの行をバッファから削除
-                        if processed_lines > 0 && processed_lines < lines.len() {
-                            let remaining_lines: Vec<&str> = lines[processed_lines..].to_vec();
-                            buffer = remaining_lines.join("\n");
-                        } else if processed_lines >= lines.len() {
-                            buffer.clear();
                         }
                     }
                     Err(e) => {
@@ -70,7 +66,13 @@ fn parse_stream_event(data: &str) -> Result<Option<String>> {
         return Ok(None);
     }
 
-    let event: StreamEvent = serde_json::from_str(data)
+    // JSONパースの前に、データが完全かどうかを簡単にチェック
+    let trimmed_data = data.trim();
+    if !trimmed_data.starts_with('{') || !trimmed_data.ends_with('}') {
+        return Ok(None); // 不完全なJSONはスキップ
+    }
+
+    let event: StreamEvent = serde_json::from_str(trimmed_data)
         .map_err(|e| AskError::StreamError(format!("Failed to parse stream event: {}", e)))?;
 
     match event.r#type.as_str() {
@@ -118,5 +120,11 @@ mod tests {
     fn test_parse_empty_data() {
         let result = parse_stream_event("").unwrap();
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_parse_incomplete_json() {
+        let result = parse_stream_event(r#"{"type":"content_block"#);
+        assert_eq!(result.unwrap(), None);
     }
 }
